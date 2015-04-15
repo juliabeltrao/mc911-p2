@@ -18,7 +18,7 @@ public  class LlvmIcmp extends LlvmInstruction{
     public String toString(){
 		switch(conditionCode){
 			case NE :
-				return "  " +lhs + " = icmp ne " + type + " " + op1 + ", " + op2;
+				return "  " +lhs + " = icmp ne " + type + " " + op1 + ", 0";
 			default:
 				return null;
 		}

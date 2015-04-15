@@ -168,48 +168,103 @@ public class Codegen extends VisitorAdapter{
 	public LlvmValue visit(BooleanType n){return null;}
 	public LlvmValue visit(IntegerType n){return null;}
 	public LlvmValue visit(IdentifierType n){return null;}
-	public LlvmValue visit(Block n){return null;}
+	
+	public LlvmValue visit(Block n){
+	
+		util.List<Statement> i = n.body;
+		
+		while(i != null){
+			i.head.accept(this);
+			i = i.tail;
+		}
+		
+		return null;
+	}
+	
 	public LlvmValue visit(If n){return null;}
 	public LlvmValue visit(While n){return null;}
 	public LlvmValue visit(Assign n){return null;}
 	public LlvmValue visit(ArrayAssign n){return null;}
-	public LlvmValue visit(And n){return null;}
+	public LlvmValue visit(And n){
+	
+		LlvmLabelValue l1 = new LlvmLabelValue();
+		// TODO: create label
+		assembler.add(new LlvmLabel(l1));
+		LlvmValue v1 = n.lhs.accept(this);
+		LlvmRegister lhs = new LlvmRegister(LlvmPrimitiveType.I32);
+		assembler.add(new LlvmIcmp(lhs, LlvmIcmp.NE, LlvmPrimitiveType.I32, v1, null));
+		//TODO branch condcional end
+		assembler.add(new LlvmBranch());
+		
+		LlvmLabelValue l2 = new LlvmLabelValue();
+		// TODO : create label
+		assembler.add(new LlvmLabel(l2));
+		LlvmValue v2 = n.rhs.accept(this);
+		LlvmRegister rhs = new LlvmRegister(LlvmPrimitiveType.I32);
+		assembler.add(new LlvmIcmp(rhs, LlvmIcmp.NE, LlvmPrimitiveType.I32, v2, null));
+		assembler.add(new LlvmBranch(l2));
+		
+		// TODO branch end
+		// TODO create label end
+		// TODO create phi
+		LlvmRegister z = new LlvmRegister(LlvmPrimitiveType.I32);
+		assembler.add(new LlvmZext(z, LlvmPrimitiveType.I1, /*a completar*/, LlvmPrimitiveType.I32));				
+		
+		return z;
+	}
+	
 	public LlvmValue visit(LessThan n){return null;}
 	public LlvmValue visit(Equal n){return null;}
+	
 	public LlvmValue visit(Minus n){
+		
 		LlvmValue v1 = n.lhs.accept(this);
 		LlvmValue v2 = n.rhs.accept(this);
 		LlvmRegister lhs = new LlvmRegister(LlvmPrimitiveType.I32);
+		
 		assembler.add(new LlvmMinus(lhs,LlvmPrimitiveType.I32,v1,v2));
+		
 		return lhs;
 	}
+	
 	public LlvmValue visit(Times n){
+	
 		LlvmValue v1 = n.lhs.accept(this);
 		LlvmValue v2 = n.rhs.accept(this);
 		LlvmRegister lhs = new LlvmRegister(LlvmPrimitiveType.I32);
+		
 		assembler.add(new LlvmTimes(lhs,LlvmPrimitiveType.I32,v1,v2));
+		
 		return lhs;
 	}
+	
 	public LlvmValue visit(ArrayLookup n){return null;}
 	public LlvmValue visit(ArrayLength n){return null;}
 	public LlvmValue visit(Call n){return null;}
-	public LlvmValue visit(True n){return null;}
-	public LlvmValue visit(False n){return null;}
+	
+	public LlvmValue visit(True n){
+		return new LlvmBool(LlvmBool.TRUE);
+	}
+	
+	public LlvmValue visit(False n){
+		return new LlvmBool(LlvmBool.FALSE);
+	}
+	
 	public LlvmValue visit(IdentifierExp n){return null;}
 	public LlvmValue visit(This n){return null;}
 	public LlvmValue visit(NewArray n){return null;}
 	public LlvmValue visit(NewObject n){return null;}
+	
 	public LlvmValue visit(Not n){
-		LlvmValue v1 = n.exp.accept(this);
-		/**TODO
-		 * iniciar v2 com zero, para a comparacao e colocar v2 no assembler
-		LlvmValue v2 = 
-		LlvmRegister lhs = new LlvmRegister(LlvmPrimitiveType.I32);
-		assembler.add(new LlvmIcmp(lhs, LlvmIcmp.NE, LlvmPrimitiveType.I32, v,))
-		* continuar a construcao do not
-		*/
-		return null;
+		
+		LlvmValue v = n.exp.accept(this);
+		
+		LlvmRegister lhs = new LlvmRegister(LlvmPrimitiveType.I1);
+		assembler.add(new LlvmXor(lhs, LlvmPrimitiveType.I1, v, new LlvmBool(LlvmBool.TRUE)));
+		
+		return lhs;
 	}
+	
 	public LlvmValue visit(Identifier n){return null;}
 }
 
