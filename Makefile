@@ -22,7 +22,11 @@ all: $(CLASSES)
 run:
 	java -classpath src:lib/projeto2.jar main/Main $(INPUT) $(OUTPUT)
 
+teste:
+	clang learn.c -S -emit-llvm -o learn.ll
+	lli learn.ll
+
 clean:
-	rm -f src/llvm/*.class src/llvmast/*.class
+	rm -f src/llvm/*.class src/llvmast/*.class learn.ll
 
 
