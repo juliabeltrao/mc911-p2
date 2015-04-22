@@ -38,7 +38,6 @@ package llvm;
 import semant.Env;
 import syntaxtree.*;
 import llvmast.*;
-
 import java.util.*;
 
 public class Codegen extends VisitorAdapter{
@@ -49,9 +48,7 @@ public class Codegen extends VisitorAdapter{
 	private ClassNode classEnv; 	// Aponta para a classe atualmente em uso em symTab
 	private MethodNode methodEnv; 	// Aponta para a metodo atualmente em uso em symTab
 	private int labelCount = 0;		// contador para gerar labels unicas
-	private LlvmLabelValue lastLabel = new LlvmLabelValue("0");	// apontador para a ultima label que foi saltada(label do bloco)
-
-
+	
 	public Codegen(){
 		assembler = new LinkedList<LlvmInstruction>();
 	}
@@ -161,14 +158,23 @@ public class Codegen extends VisitorAdapter{
 	};
 	
 	// Todos os visit's que devem ser implementados	
+	//TODO
 	public LlvmValue visit(ClassDeclSimple n){return null;}
+	//TODO
 	public LlvmValue visit(ClassDeclExtends n){return null;}
+	//TODO
 	public LlvmValue visit(VarDecl n){return null;}
+	//TODO
 	public LlvmValue visit(MethodDecl n){return null;}
+	//TODO
 	public LlvmValue visit(Formal n){return null;}
+	//TODO
 	public LlvmValue visit(IntArrayType n){return null;}
+	//TODO
 	public LlvmValue visit(BooleanType n){return null;}
+	//TODO
 	public LlvmValue visit(IntegerType n){return null;}
+	//TODO
 	public LlvmValue visit(IdentifierType n){return null;}
 	
 	public LlvmValue visit(Block n){
@@ -225,38 +231,62 @@ public class Codegen extends VisitorAdapter{
 		
 		return null;
 	}
-	public LlvmValue visit(While n){return null;}
+	
+	public LlvmValue visit(While n){
+	
+		LlvmLabelValue whileBranch = new LlvmLabelValue("_while" + labelCount++);
+		LlvmLabelValue doBranch = new LlvmLabelValue("_do" + labelCount++);
+		LlvmLabelValue endBranch = new LlvmLabelValue("_endwhile" + labelCount++);
+		
+		assembler.add(new LlvmBranch(whileBranch));
+		assembler.add(new LlvmComment("WHILE STATEMENT"));
+		assembler.add(new LlvmLabel(whileBranch));
+		LlvmValue cond = n.condition.accept(this);
+		assembler.add(new LlvmBranch(cond, doBranch, endBranch));
+		
+		assembler.add(new LlvmComment("DO STATEMENT"));
+		assembler.add(new LlvmLabel(doBranch));
+		n.body.accept(this);
+		assembler.add(new LlvmBranch(whileBranch));
+		
+		assembler.add(new LlvmComment("END POINT"));
+		assembler.add(new LlvmLabel(endBranch));
+			
+		return null;
+	}
+	
+	//TODO
 	public LlvmValue visit(Assign n){return null;}
+	//TODO
 	public LlvmValue visit(ArrayAssign n){return null;}
 	
 	public LlvmValue visit(And n){
 	
-		/*LlvmLabelValue l1 = new LlvmLabelValue();
-		LlvmLabelValue l2 = new LlvmLabelValue();
+		LlvmLabelValue trueBranch = new LlvmLabelValue("_true" + labelCount++);
+		LlvmLabelValue falseBranch = new LlvmLabelValue("_false" + labelCount++);
+		LlvmLabelValue closingBranch = new LlvmLabelValue("_closing" + labelCount++);
+		LlvmRegister falseCond = new LlvmRegister(LlvmPrimitiveType.I1);
+		LlvmRegister result = new LlvmRegister(LlvmPrimitiveType.I1);
 		
-		// TODO: create label
-		assembler.add(new LlvmLabel(l1));
 		LlvmValue v1 = n.lhs.accept(this);
-		LlvmRegister lhs = new LlvmRegister(LlvmPrimitiveType.I32);
-		assembler.add(new LlvmIcmp(lhs, LlvmIcmp.NE, LlvmPrimitiveType.I32, v1, null));
-		//TODO branch condcional end
-		assembler.add(new LlvmBranch());
+		assembler.add(new LlvmComment("test LHS and do conditional branch"));
+		assembler.add(new LlvmBranch(v1, trueBranch, falseBranch));
 		
-		// TODO : create label
-		assembler.add(new LlvmLabel(l2));
+		assembler.add(new LlvmComment("test RHS and jump to the closing"));
+		assembler.add(new LlvmLabel(trueBranch));
 		LlvmValue v2 = n.rhs.accept(this);
-		LlvmRegister rhs = new LlvmRegister(LlvmPrimitiveType.I32);
-		assembler.add(new LlvmIcmp(rhs, LlvmIcmp.NE, LlvmPrimitiveType.I32, v2, null));
-		assembler.add(new LlvmBranch(l2));
+		assembler.add(new LlvmBranch(v2, closingBranch, falseBranch));
 		
-		// TODO branch end
-		// TODO create label end
-		// TODO create phi
-		LlvmRegister z = new LlvmRegister(LlvmPrimitiveType.I32);*/
-		//assembler.add(new LlvmZext(z, LlvmPrimitiveType.I1, /*a completar*/, LlvmPrimitiveType.I32));				
+		assembler.add(new LlvmLabel(falseBranch));
+		assembler.add(new LlvmComment("tested false, making it so"));
+		assembler.add(new LlvmIcmp(falseCond, LlvmIcmp.LT, LlvmPrimitiveType.I32, new LlvmIntegerLiteral(1), new LlvmIntegerLiteral(0)));
+		assembler.add(new LlvmBranch(closingBranch));
 		
-		//return z;
-		return null;
+		assembler.add(new LlvmComment("phi, my lord, phi"));
+		assembler.add(new LlvmLabel(closingBranch));
+		assembler.add(new LlvmPhi(result, LlvmPrimitiveType.I1, falseCond, falseBranch, v2, trueBranch));			
+		
+		return result;
 	}
 	
 	public LlvmValue visit(LessThan n){
@@ -268,7 +298,16 @@ public class Codegen extends VisitorAdapter{
 		
 		return lhs;
 	}
-	public LlvmValue visit(Equal n){return null;}
+	public LlvmValue visit(Equal n){
+	
+		LlvmValue lhs = n.lhs.accept(this);
+		LlvmValue rhs = n.rhs.accept(this);
+		LlvmRegister result = new LlvmRegister(LlvmPrimitiveType.I1);
+		
+		assembler.add(new LlvmIcmp(result, LlvmIcmp.EQ, LlvmPrimitiveType.I32, lhs, rhs));
+		
+		return result;
+	}
 	
 	public LlvmValue visit(Minus n){
 		
@@ -292,8 +331,11 @@ public class Codegen extends VisitorAdapter{
 		return lhs;
 	}
 	
+	//TODO
 	public LlvmValue visit(ArrayLookup n){return null;}
+	//TODO
 	public LlvmValue visit(ArrayLength n){return null;}
+	//TODO
 	public LlvmValue visit(Call n){return null;}
 	
 	public LlvmValue visit(True n){
@@ -304,9 +346,13 @@ public class Codegen extends VisitorAdapter{
 		return new LlvmBool(LlvmBool.FALSE);
 	}
 	
+	//TODO
 	public LlvmValue visit(IdentifierExp n){return null;}
+	//TODO
 	public LlvmValue visit(This n){return null;}
+	//TODO
 	public LlvmValue visit(NewArray n){return null;}
+	//TODO
 	public LlvmValue visit(NewObject n){return null;}
 	
 	public LlvmValue visit(Not n){
@@ -319,6 +365,7 @@ public class Codegen extends VisitorAdapter{
 		return lhs;
 	}
 	
+	//TODO
 	public LlvmValue visit(Identifier n){return null;}
 }
 

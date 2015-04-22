@@ -7,6 +7,7 @@ public  class LlvmIcmp extends LlvmInstruction{
     
     public static final int NE  = 0;
     public static final int LT  = 1;
+    public static final int EQ  = 2;
     
     public LlvmIcmp(LlvmRegister lhs,  int conditionCode, LlvmType type, LlvmValue op1, LlvmValue op2){
     	this.lhs = lhs;
@@ -22,6 +23,8 @@ public  class LlvmIcmp extends LlvmInstruction{
 				return "  " + lhs + " = icmp ne " + type + " " + op1 + ", 0";
 			case LT :
 				return "  " + lhs + " = icmp slt " + type + " " + op1 + ", " + op2;
+			case EQ :
+				return "  " + lhs + " = icmp eq " + type + " " + op1 + ", " + op2;
 			default :
 				return null;
 		}

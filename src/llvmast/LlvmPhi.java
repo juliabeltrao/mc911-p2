@@ -2,26 +2,22 @@ package llvmast;
 
 public class LlvmPhi extends LlvmInstruction {
 	LlvmType type;
-	util.List<LlvmValue> valList;
-	util.List<LlvmLabel> valLabel;
+	LlvmRegister v1, lhs;
+	LlvmValue v2;
+	LlvmLabelValue l1, l2;
 	
-	LlvmPhi(LlvmType type, util.List<LlvmValue> valList, util.List<LlvmLabel> valLabel){
+	public LlvmPhi(LlvmRegister lhs, LlvmType type, LlvmRegister v1, LlvmLabelValue l1, LlvmValue v2, LlvmLabelValue l2){
 		this.type = type;
-		this.valList = valList;
-		this.valLabel = valLabel;
+		this.v1 = v1;
+		this.v2 = v2;
+		this.l1 = l1;
+		this.l2 = l2;
+		this.lhs = lhs;
 	}
 	
 	public String toString(){
 		
-		String s = "  " + "phi" + type;
-		util.List<LlvmValue> i;
-		util.List<LlvmLabel> j;
-		
-		for(i = valList, j = valLabel; i != null && j != null; i = i.tail, j = j.tail){
-			s += ", [ " + i + ", " + j + " ]";
-		}
-		
-		return s.replaceFirst(",", "");
+		return "  " + lhs + " = phi " + type + " [ " + v1 + ", %" + l1 + " ], [ " + v2 + ", %" + l2 + " ]";
 	}
 
 }
