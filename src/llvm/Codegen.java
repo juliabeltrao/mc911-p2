@@ -48,6 +48,8 @@ public class Codegen extends VisitorAdapter{
   	private SymTab symTab;
 	private ClassNode classEnv; 	// Aponta para a classe atualmente em uso em symTab
 	private MethodNode methodEnv; 	// Aponta para a metodo atualmente em uso em symTab
+	private int labelCount = 0;		// contador para gerar labels unicas
+	private LlvmLabelValue lastLabel = new LlvmLabelValue("0");	// apontador para a ultima label que foi saltada(label do bloco)
 
 
 	public Codegen(){
@@ -181,13 +183,57 @@ public class Codegen extends VisitorAdapter{
 		return null;
 	}
 	
-	public LlvmValue visit(If n){return null;}
+	public LlvmValue visit(If n){
+		
+		LlvmValue cond = n.condition.accept(this);
+		LlvmLabelValue beginThen = new LlvmLabelValue("_then" + labelCount++);
+		
+		if(n.elseClause != null){
+			LlvmLabelValue beginElse = new LlvmLabelValue("_else" + labelCount++);
+			LlvmLabelValue endIf = new LlvmLabelValue("_endif" + labelCount++);
+			//IF
+			assembler.add(new LlvmComment("IF STATEMENT"));
+			assembler.add(new LlvmBranch(cond, beginThen, beginElse));
+			//THEN
+			assembler.add(new LlvmComment("THEN STATEMENT"));
+			assembler.add(new LlvmLabel(beginThen));
+			n.thenClause.accept(this);
+			assembler.add(new LlvmBranch(endIf));
+			//ELSE
+			assembler.add(new LlvmComment("ELSE STATEMENT"));
+			assembler.add(new LlvmLabel(beginElse));
+			n.elseClause.accept(this);
+			assembler.add(new LlvmBranch(endIf));
+			//ENDIF
+			assembler.add(new LlvmComment("END POINT"));
+			assembler.add(new LlvmLabel(endIf));
+		}
+		else{
+			LlvmLabelValue endIf = new LlvmLabelValue("_endif" + labelCount++);
+			//IF
+			assembler.add(new LlvmComment("IF STATEMENT"));
+			assembler.add(new LlvmBranch(cond, beginThen, endIf));
+			//THEN
+			assembler.add(new LlvmComment("THEN STATEMENT"));
+			assembler.add(new LlvmLabel(beginThen));
+			n.thenClause.accept(this);
+			assembler.add(new LlvmBranch(endIf));
+			//ENDIF
+			assembler.add(new LlvmComment("END POINT"));
+			assembler.add(new LlvmLabel(endIf));
+		}
+		
+		return null;
+	}
 	public LlvmValue visit(While n){return null;}
 	public LlvmValue visit(Assign n){return null;}
 	public LlvmValue visit(ArrayAssign n){return null;}
+	
 	public LlvmValue visit(And n){
 	
-		LlvmLabelValue l1 = new LlvmLabelValue();
+		/*LlvmLabelValue l1 = new LlvmLabelValue();
+		LlvmLabelValue l2 = new LlvmLabelValue();
+		
 		// TODO: create label
 		assembler.add(new LlvmLabel(l1));
 		LlvmValue v1 = n.lhs.accept(this);
@@ -196,7 +242,6 @@ public class Codegen extends VisitorAdapter{
 		//TODO branch condcional end
 		assembler.add(new LlvmBranch());
 		
-		LlvmLabelValue l2 = new LlvmLabelValue();
 		// TODO : create label
 		assembler.add(new LlvmLabel(l2));
 		LlvmValue v2 = n.rhs.accept(this);
@@ -207,13 +252,22 @@ public class Codegen extends VisitorAdapter{
 		// TODO branch end
 		// TODO create label end
 		// TODO create phi
-		LlvmRegister z = new LlvmRegister(LlvmPrimitiveType.I32);
-		assembler.add(new LlvmZext(z, LlvmPrimitiveType.I1, /*a completar*/, LlvmPrimitiveType.I32));				
+		LlvmRegister z = new LlvmRegister(LlvmPrimitiveType.I32);*/
+		//assembler.add(new LlvmZext(z, LlvmPrimitiveType.I1, /*a completar*/, LlvmPrimitiveType.I32));				
 		
-		return z;
+		//return z;
+		return null;
 	}
 	
-	public LlvmValue visit(LessThan n){return null;}
+	public LlvmValue visit(LessThan n){
+		LlvmValue v1 = n.lhs.accept(this);
+		LlvmValue v2 = n.rhs.accept(this);
+		LlvmRegister lhs = new LlvmRegister(LlvmPrimitiveType.I1); 
+		
+		assembler.add(new LlvmIcmp(lhs, LlvmIcmp.LT, LlvmPrimitiveType.I32, v1, v2));
+		
+		return lhs;
+	}
 	public LlvmValue visit(Equal n){return null;}
 	
 	public LlvmValue visit(Minus n){
