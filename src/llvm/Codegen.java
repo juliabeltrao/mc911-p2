@@ -349,7 +349,7 @@ class SymTab extends VisitorAdapter{
     }
 
     public LlvmValue visit(MainClass n){
-    	classes.put(n.className.s, new ClassNode(n.className.s, null, null));
+    	classes.put(n.className.s, new ClassNode(n.className.s, null, null, null));
     	return null;
     }
 
@@ -378,7 +378,7 @@ class SymTab extends VisitorAdapter{
 	public LlvmValue visit(MethodDecl n){
 		
 		
-		
+		new MethodNode(n.name, n.returnType, n.formals);
 		
 		return null;
 	}
@@ -402,9 +402,10 @@ class ClassNode extends LlvmType {
 			this.attrList = varList;
 			
 			// TODO precorrer methodList;
-			//for(){
-			//	m.accept(this);
-			//}
+			for(util.List<MethodDecl> l = methodList; l != null; l = l.tail){
+	    		l.head.accept(this);
+				this.methodList.add(l.head);
+			}
 		}
 }
 
