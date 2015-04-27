@@ -156,26 +156,37 @@ public class Codegen extends VisitorAdapter{
 	public LlvmValue visit(IntegerLiteral n){
 		return new LlvmIntegerLiteral(n.value);
 	};
+		
+	//TODO Teste
+	public LlvmValue visit(VarDecl n){
+		return new LlvmNamedValue("%_" + n.name.s, n.type.accept(this).type);
+	}
 	
-	// Todos os visit's que devem ser implementados	
-	//TODO
-	public LlvmValue visit(ClassDeclSimple n){return null;}
-	//TODO
-	public LlvmValue visit(ClassDeclExtends n){return null;}
-	//TODO
-	public LlvmValue visit(VarDecl n){return null;}
-	//TODO
-	public LlvmValue visit(MethodDecl n){return null;}
-	//TODO
-	public LlvmValue visit(Formal n){return null;}
-	//TODO
-	public LlvmValue visit(IntArrayType n){return null;}
-	//TODO
-	public LlvmValue visit(BooleanType n){return null;}
-	//TODO
-	public LlvmValue visit(IntegerType n){return null;}
-	//TODO
-	public LlvmValue visit(IdentifierType n){return null;}
+	//TODO Teste
+	public LlvmValue visit(Formal n){
+		return new LlvmNamedValue("%_" + n.name.s, n.type.accept(this).type);
+	}
+	
+	//TODO Teste
+	public LlvmValue visit(IntArrayType n){
+		return new LlvmNamedValue("PTR", LlvmPrimitiveType.I32);
+	}
+	
+	//TODO Teste
+	public LlvmValue visit(BooleanType n){
+		return new LlvmNamedValue("BOOL", LlvmPrimitiveType.I1);
+	}
+	
+	//TODO Teste
+	public LlvmValue visit(IntegerType n){
+		return new LlvmNamedValue("INT", LlvmPrimitiveType.I32);
+	}
+	
+	//TODO Teste
+	public LlvmValue visit(IdentifierType n){
+		return new LlvmNamedValue("ID", LlvmPrimitiveType.LABEL);
+		//return n.accept(this);
+	}
 	
 	public LlvmValue visit(Block n){
 	
@@ -255,10 +266,12 @@ public class Codegen extends VisitorAdapter{
 		return null;
 	}
 	
-	//TODO
-	public LlvmValue visit(Assign n){return null;}
-	//TODO
-	public LlvmValue visit(ArrayAssign n){return null;}
+	//TODO Teste
+	public LlvmValue visit(Assign n){
+		LlvmValue lhs =	new LlvmNamedValue( "%_" + n.var.s, new LlvmPointer(n.var.accept(this).type));
+		assembler.add(new LlvmStore(n.exp.accept(this), lhs));
+		return null;
+	}
 	
 	public LlvmValue visit(And n){
 	
@@ -331,13 +344,6 @@ public class Codegen extends VisitorAdapter{
 		return lhs;
 	}
 	
-	//TODO
-	public LlvmValue visit(ArrayLookup n){return null;}
-	//TODO
-	public LlvmValue visit(ArrayLength n){return null;}
-	//TODO
-	public LlvmValue visit(Call n){return null;}
-	
 	public LlvmValue visit(True n){
 		return new LlvmBool(LlvmBool.TRUE);
 	}
@@ -345,15 +351,6 @@ public class Codegen extends VisitorAdapter{
 	public LlvmValue visit(False n){
 		return new LlvmBool(LlvmBool.FALSE);
 	}
-	
-	//TODO
-	public LlvmValue visit(IdentifierExp n){return null;}
-	//TODO
-	public LlvmValue visit(This n){return null;}
-	//TODO
-	public LlvmValue visit(NewArray n){return null;}
-	//TODO
-	public LlvmValue visit(NewObject n){return null;}
 	
 	public LlvmValue visit(Not n){
 		
@@ -364,9 +361,67 @@ public class Codegen extends VisitorAdapter{
 		
 		return lhs;
 	}
+
 	
+/**********************************************************************************/
+/* === Restando ==== 
+* 
+* 
+*/
+/**********************************************************************************/
+
+	//TODO
+	public LlvmValue visit(ClassDeclSimple n){return null;}
+	//TODO
+	public LlvmValue visit(ClassDeclExtends n){return null;}
+	//TODO
+	public LlvmValue visit(MethodDecl n){
+	
+		List<LlvmValue> args = new LinkedList<LlvmValue>();
+		
+		for(util.List<syntaxtree.Formal> i = n.formals; i != null; i = i.tail ){
+			args.add(i.head.accept(this));
+		}
+		assembler.add(new LlvmDefine(n.name.s, n.returnType.accept(this).type, args));
+		
+		return null;
+	}
+	//TODO
+	public LlvmValue visit(ArrayAssign n){
+	
+		/*LlvmType type = n.var.accept(this).type;
+		LlvmRegister lhs;
+		LlvmRegister addr = new LlvmRegister(new LlvmPointer(type));
+		//TODO insert array dimension
+		LlvmRegister src = new LlvmNamedValue("%_" + n.var.s, new LlvmPointer(new LlvmArray(, type)));
+		List<LlvmValue> offsets = new LinkedList<LlvmValue>();
+		offsets.add(new LlvmIntegerLiteral(0));
+		//TODO insert array offset
+		offsets.add(new LlvmIntegerLiteral());
+		assembler.add(new LlvmGetElementPointer(lhs,src,offsets));
+		assembler.add(LlvmStore);
+		n.var.accept(this)*/
+		
+		
+		return null;
+	}
+	//TODO
+	public LlvmValue visit(ArrayLookup n){return null;}
+	//TODO
+	public LlvmValue visit(ArrayLength n){return null;}
+	//TODO
+	public LlvmValue visit(Call n){return null;}
+	//TODO
+	public LlvmValue visit(IdentifierExp n){return null;}
+	//TODO
+	public LlvmValue visit(This n){return null;}
+	//TODO
+	public LlvmValue visit(NewArray n){return null;}
+	//TODO
+	public LlvmValue visit(NewObject n){return null;}
 	//TODO
 	public LlvmValue visit(Identifier n){return null;}
+
 }
 
 
