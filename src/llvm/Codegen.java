@@ -461,7 +461,8 @@ class SymTab extends VisitorAdapter{
     	
     	List<LlvmType> typeList = null;
     	List<LlvmValue> varList = null;
-    	List<MethodNode> methodList = null;
+    	List<MethodDecl> methodList = null;
+    	
     	
     	for(util.List<VarDecl> l = n.varList; l != null; l = l.tail){
     		// Constroi TypeList com os tipos das variáveis da Classe (vai formar a Struct da classe)
@@ -470,14 +471,14 @@ class SymTab extends VisitorAdapter{
     		varList.add(l.head.name.accept(this));
     	}
     	
-    	classEnv = new ClassNode(n.name.s, new LlvmStructure(typeList), varList, methodList);
-    	
     	// Percorre n.methodList visitando cada método
     	// TODO precorrer methodList;
     	for(util.List<MethodDecl> l = n.methodList; l != null; l = l.tail){
-    		l.head.accept(this);
     		//methodList.add(l.head);
+    		methodList.add(l.head);
     	}
+    	
+    	classEnv = new ClassNode(n.name.s, new LlvmStructure(typeList), varList, methodList);
     	
     	classes.put(n.name.s, classEnv);
       		    	
@@ -487,6 +488,8 @@ class SymTab extends VisitorAdapter{
 	public LlvmValue visit(ClassDeclExtends n){return null;}
 	
 	public LlvmValue visit(VarDecl n){
+		n.name.s; //String
+		n.type.accept(this).type //LlvmValue
 		variables.put(n.name.s, n.type.accept(this));
 		//n.name.accept(this);
 		//n.type.accept(this);
@@ -531,20 +534,25 @@ class SymTab extends VisitorAdapter{
 }
 
 class ClassNode extends LlvmType {
-		String className;
+		private String className;
 		//String upperClass;
-		LlvmStructure classType;
-		List<LlvmValue> attrList;
-		List<MethodNode> methodList;
-		Map<Integer, String> methodIndexes;
+		private LlvmStructure classType;
+		private List<LlvmValue> attrList;
+		private List<MethodDecl> methodList;
+		private Map<Integer, String> methodIndexes;
 		
-		ClassNode (String nameClass, LlvmStructure classType, List<LlvmValue> varList, List<MethodNode> methodList){
+		ClassNode (String nameClass, LlvmStructure classType, List<LlvmValue> varList, List<MethodDecl> methodList){
 			this.className = nameClass;
 			this.classType = classType;
 			this.attrList = varList;
 			this.methodList = methodList;
 			
 		}
+		
+		public void addVar(String name, LlvmType type){
+			
+		}
+		
 }
 
 class MethodNode {
