@@ -433,60 +433,143 @@ public class Codegen extends VisitorAdapter{
 /**********************************************************************************/
 
 class SymTab extends VisitorAdapter{
-    public Map<String, ClassNode> classes;     
+    public Map<String, ClassNode> classes;
     private ClassNode classEnv;    //aponta para a classe em uso
-
+    private MethodNode methodEnv;
+    private Map<String, LlvmType> variables;
+    
     public LlvmValue FillTabSymbol(Program n){
-	n.accept(this);
-	return null;
-}
-public LlvmValue visit(Program n){
-	n.mainClass.accept(this);
+    	n.accept(this);
+    	return null;
+    }
 
-	for (util.List<ClassDecl> c = n.classList; c != null; c = c.tail)
-		c.head.accept(this);
+    public LlvmValue visit(Program n){
+    	n.mainClass.accept(this);
 
-	return null;
-}
+    	for (util.List<ClassDecl> c = n.classList; c != null; c = c.tail)
+    		c.head.accept(this);
 
-public LlvmValue visit(MainClass n){
-	classes.put(n.className.s, new ClassNode(n.className.s, null, null));
-	return null;
-}
+    	return null;
+    }
 
-public LlvmValue visit(ClassDeclSimple n){
-	List<LlvmType> typeList = null;
-	// Constroi TypeList com os tipos das variáveis da Classe (vai formar a Struct da classe)
-	
-	List<LlvmValue> varList = null;
-	// Constroi VarList com as Variáveis da Classe
+    public LlvmValue visit(MainClass n){
+    	classes.put(n.className.s, new ClassNode(n.className.s, null, null, null));
+    	return null;
+    }
 
-	classes.put(n.name.s, new ClassNode(n.name.s, 
-										new LlvmStructure(typeList), 
-										varList)
-      			);
+    public LlvmValue visit(ClassDeclSimple n){
+    	
+    	List<LlvmType> typeList = null;
+    	List<LlvmValue> varList = null;
+    	List<MethodNode> methodList = null;
+    	
+    	for(util.List<VarDecl> l = n.varList; l != null; l = l.tail){
+    		// Constroi TypeList com os tipos das variáveis da Classe (vai formar a Struct da classe)
+    		typeList.add(l.head.type.accept(this).type);
+    		// Constroi VarList com as Variáveis da Classe
+    		varList.add(l.head.name.accept(this));
+    	}
+    	
+    	classEnv = new ClassNode(n.name.s, new LlvmStructure(typeList), varList, methodList);
+    	
     	// Percorre n.methodList visitando cada método
-	return null;
-}
+    	// TODO precorrer methodList;
+    	for(util.List<MethodDecl> l = n.methodList; l != null; l = l.tail){
+    		l.head.accept(this);
+    		//methodList.add(l.head);
+    	}
+    	
+    	classes.put(n.name.s, classEnv);
+      		    	
+    	return null;
+    }
 
 	public LlvmValue visit(ClassDeclExtends n){return null;}
-	public LlvmValue visit(VarDecl n){return null;}
-	public LlvmValue visit(Formal n){return null;}
-	public LlvmValue visit(MethodDecl n){return null;}
+	
+	public LlvmValue visit(VarDecl n){
+		variables.put(n.name.s, n.type.accept(this));
+		//n.name.accept(this);
+		//n.type.accept(this);
+		
+		return null;
+	}
+	
+	public LlvmValue visit(Formal n){
+		
+		n.name.accept(this);
+		n.type.accept(this);
+		
+		return null;
+	}
+	
+	public LlvmValue visit(MethodDecl n){
+		
+		for(util.List<Formal> l = n.formals; l != null; l = l.tail)
+    		l.head.accept(this);
+		
+		for(util.List<VarDecl> l = n.locals; l != null; l = l.tail)
+    		l.head.accept(this);
+		
+		return null;
+	}
+	
 	public LlvmValue visit(IdentifierType n){return null;}
-	public LlvmValue visit(IntArrayType n){return null;}
-	public LlvmValue visit(BooleanType n){return null;}
+	public LlvmValue visit(IntArrayType n){
+		
+		LlvmArray a;
+		
+		return a;
+	}
+	
+	public LlvmValue visit(BooleanType n){
+		
+		LlvmBool b;
+		
+		return b;
+	}
 	public LlvmValue visit(IntegerType n){return null;}
 }
 
 class ClassNode extends LlvmType {
-	ClassNode (String nameClass, LlvmStructure classType, List<LlvmValue> varList){
-	}
+		String className;
+		//String upperClass;
+		LlvmStructure classType;
+		List<LlvmValue> attrList;
+		List<MethodNode> methodList;
+		Map<Integer, String> methodIndexes;
+		
+		ClassNode (String nameClass, LlvmStructure classType, List<LlvmValue> varList, List<MethodNode> methodList){
+			this.className = nameClass;
+			this.classType = classType;
+			this.attrList = varList;
+			this.methodList = methodList;
+			
+		}
 }
 
 class MethodNode {
+	String methodName;
+	LlvmStructure methodType;
+	List<LlvmValue> paramList;
+	public Map<String, LlvmType> variables;
+
+	MethodNode(String methodName, LlvmStructure methodType, List<LlvmValue> paramList){
+		this.methodName = methodName;
+		this.methodType = methodType;
+		this.paramList = paramList;
+	}	
+	
 }
 
-
+/*class VarNode{
+	String varName;
+	LlvmType type;
+	Integer offset;
+		
+	VarNode(String varName, LlvmType type){
+		this.varName = varName;
+		this.type = type;
+	}
+}*/
 
 
