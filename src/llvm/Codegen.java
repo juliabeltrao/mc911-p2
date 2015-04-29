@@ -414,11 +414,17 @@ class SymTab extends VisitorAdapter{
 	public LlvmValue visit(IdentifierType n){return null;}
 	public LlvmValue visit(IntArrayType n){
 		
+		LlvmArray a;
 		
-		
-		return null;}
+		return a;
+	}
 	
-	public LlvmValue visit(BooleanType n){return null;}
+	public LlvmValue visit(BooleanType n){
+		
+		LlvmBool b;
+		
+		return b;
+	}
 	public LlvmValue visit(IntegerType n){return null;}
 }
 
@@ -453,6 +459,15 @@ class MethodNode {
 	
 }
 
-
+/*class VarNode{
+	String varName;
+	LlvmType type;
+	Integer offset;
+		
+	VarNode(String varName, LlvmType type){
+		this.varName = varName;
+		this.type = type;
+	}
+}*/
 
 
