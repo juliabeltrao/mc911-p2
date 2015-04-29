@@ -59,7 +59,7 @@ public class Codegen extends VisitorAdapter{
 		
 		// Preenchendo a Tabela de Símbolos
 		// Quem quiser usar 'env', apenas comente essa linha
-		// codeGenerator.symTab.FillTabSymbol(p);
+		codeGenerator.symTab.FillTabSymbol(p);
 		
 		// Formato da String para o System.out.printlnijava "%d\n"
 		codeGenerator.assembler.add(new LlvmConstantDeclaration("@.formatting.string", "private constant [4 x i8] c\"%d\\0A\\00\""));	
@@ -453,17 +453,15 @@ class SymTab extends VisitorAdapter{
     }
 
     public LlvmValue visit(MainClass n){
-    	classes.put(n.className.s, new ClassNode(n.className.s, null, null, null));
+    	classes.put(n.className.s, new ClassNode(n.className.s, null, null));
     	return null;
     }
 
     public LlvmValue visit(ClassDeclSimple n){
     	
-    	List<LlvmType> typeList = null;
-    	List<LlvmValue> varList = null;
-    	List<MethodDecl> methodList = null;
-    	
-    	
+    	List<LlvmType> typeList = new LinkedList<LlvmType>();
+    	List<LlvmValue> varList = new LinkedList<LlvmValue>();
+    	    	
     	for(util.List<VarDecl> l = n.varList; l != null; l = l.tail){
     		// Constroi TypeList com os tipos das variáveis da Classe (vai formar a Struct da classe)
     		typeList.add(l.head.type.accept(this).type);
@@ -471,14 +469,13 @@ class SymTab extends VisitorAdapter{
     		varList.add(l.head.name.accept(this));
     	}
     	
-    	// Percorre n.methodList visitando cada método
-    	// TODO precorrer methodList;
-    	for(util.List<MethodDecl> l = n.methodList; l != null; l = l.tail){
-    		//methodList.add(l.head);
-    		methodList.add(l.head);
-    	}
+    	classEnv = new ClassNode(n.name.s, new LlvmStructure(typeList), varList);
     	
-    	classEnv = new ClassNode(n.name.s, new LlvmStructure(typeList), varList, methodList);
+    	// Percorre n.methodList visitando cada método
+    	for(util.List<MethodDecl> l = n.methodList; l != null; l = l.tail){
+    		l.head.accept(this);
+    		classEnv.addMethod(methodEnv);
+    	}
     	
     	classes.put(n.name.s, classEnv);
       		    	
@@ -488,49 +485,49 @@ class SymTab extends VisitorAdapter{
 	public LlvmValue visit(ClassDeclExtends n){return null;}
 	
 	public LlvmValue visit(VarDecl n){
-		n.name.s; //String
-		n.type.accept(this).type //LlvmValue
-		variables.put(n.name.s, n.type.accept(this));
-		//n.name.accept(this);
-		//n.type.accept(this);
-		
-		return null;
+		return new LlvmNamedValue(n.name.s, n.type.accept(this).type);
 	}
 	
 	public LlvmValue visit(Formal n){
-		
-		n.name.accept(this);
-		n.type.accept(this);
-		
-		return null;
+		return new LlvmNamedValue(n.name.s, n.type.accept(this).type);
 	}
 	
 	public LlvmValue visit(MethodDecl n){
 		
-		for(util.List<Formal> l = n.formals; l != null; l = l.tail)
-    		l.head.accept(this);
+		List<LlvmType> formalTypes = new LinkedList<LlvmType>();
+		List<LlvmValue> formalNames = new LinkedList<LlvmValue>();
+		LlvmValue form;
+		
+		for(util.List<Formal> l = n.formals; l != null; l = l.tail){
+    		form = l.head.accept(this);
+			formalTypes.add(form.type);
+    		//formalNames.add(l.head.name.s);
+    	}
+		
+		methodEnv = new MethodNode(n.name.s, new LlvmStructure(formalTypes), formalNames);
 		
 		for(util.List<VarDecl> l = n.locals; l != null; l = l.tail)
-    		l.head.accept(this);
-		
+    		//methodEnv.addVar(l.head.name.s, l.head.accept(this).type);
+			methodEnv.addVar(l.head.accept(this));
+			
 		return null;
 	}
 	
-	public LlvmValue visit(IdentifierType n){return null;}
+	public LlvmValue visit(IdentifierType n){
+		return new LlvmNamedValue("ID", LlvmPrimitiveType.LABEL);
+	}
+	
 	public LlvmValue visit(IntArrayType n){
-		
-		LlvmArray a;
-		
-		return a;
+		return new LlvmNamedValue("PTR", LlvmPrimitiveType.I32);
 	}
 	
 	public LlvmValue visit(BooleanType n){
-		
-		LlvmBool b;
-		
-		return b;
+		return new LlvmNamedValue("BOOL", LlvmPrimitiveType.I1);
 	}
-	public LlvmValue visit(IntegerType n){return null;}
+	
+	public LlvmValue visit(IntegerType n){
+		return new LlvmNamedValue("INT", LlvmPrimitiveType.I32);
+	}
 }
 
 class ClassNode extends LlvmType {
@@ -538,19 +535,17 @@ class ClassNode extends LlvmType {
 		//String upperClass;
 		private LlvmStructure classType;
 		private List<LlvmValue> attrList;
-		private List<MethodDecl> methodList;
+		private List<MethodNode> methodList;
 		private Map<Integer, String> methodIndexes;
 		
-		ClassNode (String nameClass, LlvmStructure classType, List<LlvmValue> varList, List<MethodDecl> methodList){
+		ClassNode (String nameClass, LlvmStructure classType, List<LlvmValue> varList){
 			this.className = nameClass;
 			this.classType = classType;
 			this.attrList = varList;
-			this.methodList = methodList;
-			
 		}
 		
-		public void addVar(String name, LlvmType type){
-			
+		public void addMethod(MethodNode m){
+			methodList.add(m);
 		}
 		
 }
@@ -559,25 +554,21 @@ class MethodNode {
 	String methodName;
 	LlvmStructure methodType;
 	List<LlvmValue> paramList;
-	public Map<String, LlvmType> variables;
-
+	//Map<String, LlvmType> variables;
+	List<LlvmValue> variables;
+	
 	MethodNode(String methodName, LlvmStructure methodType, List<LlvmValue> paramList){
 		this.methodName = methodName;
 		this.methodType = methodType;
 		this.paramList = paramList;
 	}	
 	
-}
-
-/*class VarNode{
-	String varName;
-	LlvmType type;
-	Integer offset;
-		
-	VarNode(String varName, LlvmType type){
-		this.varName = varName;
-		this.type = type;
+	public void addVar(LlvmValue var){
+		variables.add(var);
 	}
-}*/
-
-
+	
+/*	public void addVar(String name, LlvmType type){
+		variables.put(name, type);
+	}
+*/	
+}
