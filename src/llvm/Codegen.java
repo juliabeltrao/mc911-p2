@@ -45,7 +45,7 @@ public class Codegen extends VisitorAdapter{
 	private List<LlvmInstruction> assembler;
 	private Codegen codeGenerator;
 
-  	private SymTab symTab;
+  	private SymTab symTab = new SymTab();
 	private ClassNode classEnv; 	// Aponta para a classe atualmente em uso em symTab
 	private MethodNode methodEnv; 	// Aponta para a metodo atualmente em uso em symTab
 	private int labelCount = 0;		// contador para gerar labels unicas
@@ -60,7 +60,7 @@ public class Codegen extends VisitorAdapter{
 		
 		// Preenchendo a Tabela de Símbolos
 		// Quem quiser usar 'env', apenas comente essa linha
-		//codeGenerator.symTab.FillTabSymbol(p);
+		codeGenerator.symTab.FillTabSymbol(p);
 		
 		// Formato da String para o System.out.printlnijava "%d\n"
 		codeGenerator.assembler.add(new LlvmConstantDeclaration("@.formatting.string", "private constant [4 x i8] c\"%d\\0A\\00\""));	
@@ -173,7 +173,7 @@ public class Codegen extends VisitorAdapter{
 	
 	//TODO Teste
 	public LlvmValue visit(IntArrayType n){
-		return new LlvmNamedValue("PTR", LlvmPrimitiveType.I32);
+		return new LlvmNamedValue("PTR", new LlvmPointer(LlvmPrimitiveType.I32));
 	}
 	
 	//TODO Teste
@@ -272,7 +272,15 @@ public class Codegen extends VisitorAdapter{
 	
 	//TODO Teste
 	public LlvmValue visit(Assign n){
-		LlvmValue lhs =	new LlvmNamedValue( "%_" + n.var.s, new LlvmPointer(LlvmPrimitiveType.I32));
+		
+		LlvmType t;
+		
+		t = methodEnv.getVarType(n.var.s);
+		if(t == null){
+			t = classEnv.getAttrType(n.var.s);
+		}
+		
+		LlvmValue lhs =	new LlvmNamedValue( "%_" + n.var.s, new LlvmPointer(t));
 		assembler.add(new LlvmStore(n.exp.accept(this), lhs));
 		return null;
 	}
@@ -368,7 +376,7 @@ public class Codegen extends VisitorAdapter{
 
 	public LlvmValue visit(ClassDeclSimple n){
 		
-		//classEnv = symTab.getClass(n.name.s);
+		classEnv = symTab.getClass(n.name.s);
 		
 		List<LlvmType> types = new LinkedList<LlvmType>();
 		
@@ -390,7 +398,7 @@ public class Codegen extends VisitorAdapter{
 	//TODO
 	public LlvmValue visit(MethodDecl n){
 		
-		//methodEnv = classEnv.getMethod(n.name.s);
+		methodEnv = classEnv.getMethod(n.name.s);
 	
 		List<LlvmValue> args = new LinkedList<LlvmValue>();
 		
@@ -423,8 +431,15 @@ public class Codegen extends VisitorAdapter{
 	//TODO
 	public LlvmValue visit(Identifier n){
 		
-		LlvmValue val = new LlvmNamedValue("%_" + n.s, new LlvmPointer(LlvmPrimitiveType.I32));
-		LlvmRegister lhs = new LlvmRegister(LlvmPrimitiveType.I32);
+		LlvmType t;
+		
+		t = methodEnv.getVarType(n.s);
+		if(t == null){
+			t = classEnv.getAttrType(n.s);
+		}
+		
+		LlvmValue val = new LlvmNamedValue("%_" + n.s, new LlvmPointer(t));
+		LlvmRegister lhs = new LlvmRegister(t);
 		
 		assembler.add(new LlvmLoad(lhs, val));
 		
@@ -469,7 +484,12 @@ public class Codegen extends VisitorAdapter{
 	//TODO
 	public LlvmValue visit(This n){return null;}
 	//TODO
-	public LlvmValue visit(NewArray n){return null;}
+	public LlvmValue visit(NewArray n){
+	
+		
+		
+		return null;
+	}
 	//TODO
 	public LlvmValue visit(NewObject n){return null;}
 
@@ -484,7 +504,7 @@ public class Codegen extends VisitorAdapter{
 /**********************************************************************************/
 
 class SymTab extends VisitorAdapter{
-    public Map<String, ClassNode> classes;
+    public Map<String, ClassNode> classes = new HashMap<String, ClassNode>();
     private ClassNode classEnv;    //aponta para a classe em uso
     private MethodNode methodEnv;  //aponta para o método em uso
     //private Map<String, LlvmType> variables;

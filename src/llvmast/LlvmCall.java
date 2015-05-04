@@ -35,9 +35,7 @@ public  class LlvmCall extends LlvmInstruction{
 	public String toString(){
 
 	String arguments = "";
-System.out.println("args " + args.size());
 	for(int i = 0; i<args.size(); i++){
-System.out.println(args.get(i).type + " " + args.get(i));
 	    arguments = arguments + args.get(i).type + " " + args.get(i);
 	    if(i+1<args.size()) 
 		arguments = arguments + ", ";
