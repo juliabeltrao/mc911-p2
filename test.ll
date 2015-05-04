@@ -8,15 +8,17 @@ entry:
   %tmp3 = load i32 * %tmp0
   ret i32 %tmp3
 }
-define i32 A() {
+define i32 @A() {
   %_a = alloca i32
   %_b = alloca i32
   %_c = alloca i32
-  %tmp4 = getelementptr [4 x i8] * @.formatting.string, i32 0, i32 0
-  %tmp5 = call i32 (i8 *, ...)* @printf(i8 * %tmp4, i32 10)
+  store i32 2, i32 * %_a
+  %tmp4 = load i32 * %_a
+  %tmp5 = getelementptr [4 x i8] * @.formatting.string, i32 0, i32 0
+  %tmp6 = call i32 (i8 *, ...)* @printf(i8 * %tmp5, i32 %tmp4)
   ret i32 1
 }
-define i32 i() {
+define i32 @i() {
   %_a = alloca i1
   ret i32 0
 }
