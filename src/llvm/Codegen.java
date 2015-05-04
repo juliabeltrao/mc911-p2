@@ -480,7 +480,10 @@ public class Codegen extends VisitorAdapter{
 	//TODO
 	public LlvmValue visit(ArrayLength n){return null;}
 	//TODO
-	public LlvmValue visit(Call n){return null;}
+	public LlvmValue visit(Call n){
+			
+		return null;
+	}
 	//TODO
 	public LlvmValue visit(This n){return null;}
 	//TODO
@@ -490,9 +493,20 @@ public class Codegen extends VisitorAdapter{
 		
 		return null;
 	}
+	
 	//TODO
-	public LlvmValue visit(NewObject n){return null;}
-
+	public LlvmValue visit(NewObject n){
+		
+		LlvmType t = n.type.accept(this).type;		
+		
+		LlvmRegister lhs = new LlvmRegister(t);
+				
+		assembler.add(new LlvmMalloc(lhs, t, "%class." + n.className.s));
+			
+		return lhs;
+		
+	}
+		
 }
 
 
