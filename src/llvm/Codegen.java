@@ -553,13 +553,20 @@ class SymTab extends VisitorAdapter{
 	public LlvmValue visit(IntegerType n){
 		return new LlvmNamedValue("INT", LlvmPrimitiveType.I32);
 	}
+	
+	public int retrieveVarOffset(String className){
+		classEnv = classes.get(className);
+		//if(classEnv.hasUpper())
+		// TODO retornar offset da variavel (apenas considerar classe simples a princípio)
+		return 0;
+	}
 }
 
 class ClassNode extends LlvmType {
 		private String className;
 		private LlvmStructure classType;
 		private String upperClass = "";
-		private List<LlvmValue> attrList;
+		private List<LlvmValue> attrList; //TODO mudar pra Map
 		private List<MethodNode> methodList = new LinkedList<MethodNode>();
 		private Map<String, Integer> methodIndexes = new HashMap<String, Integer>();
 		private Integer index = 0;
@@ -568,6 +575,7 @@ class ClassNode extends LlvmType {
 			this.className = nameClass;
 			this.classType = classType;
 			this.attrList = varList;
+			// TODO converter List para Map
 		}
 		
 		public void addMethod(MethodNode m){
@@ -577,7 +585,14 @@ class ClassNode extends LlvmType {
 		
 		public void extend(String className){
 			this.upperClass = className;
-			
+		}
+		
+		public boolean hasUpper(){
+			return !(this.upperClass.isEmpty());
+		}
+		
+		public String getName(){
+			return this.className;
 		}
 }
 
