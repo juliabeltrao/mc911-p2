@@ -44,7 +44,7 @@ public class Codegen extends VisitorAdapter{
 	private List<LlvmInstruction> assembler;
 	private Codegen codeGenerator;
 
-  	private SymTab symTab;
+  	private SymTab symTab = new SymTab();
 	private ClassNode classEnv; 	// Aponta para a classe atualmente em uso em symTab
 	private MethodNode methodEnv; 	// Aponta para a metodo atualmente em uso em symTab
 	private int labelCount = 0;		// contador para gerar labels unicas
@@ -433,7 +433,7 @@ public class Codegen extends VisitorAdapter{
 /**********************************************************************************/
 
 class SymTab extends VisitorAdapter{
-    public Map<String, ClassNode> classes;
+    public Map<String, ClassNode> classes = new HashMap<String, ClassNode>();
     private ClassNode classEnv;    //aponta para a classe em uso
     private MethodNode methodEnv;  //aponta para o método em uso
     //private Map<String, LlvmType> variables;
