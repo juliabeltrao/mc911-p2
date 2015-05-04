@@ -38,6 +38,7 @@ package llvm;
 import semant.Env;
 import syntaxtree.*;
 import llvmast.*;
+
 import java.util.*;
 
 public class Codegen extends VisitorAdapter{
@@ -59,7 +60,7 @@ public class Codegen extends VisitorAdapter{
 		
 		// Preenchendo a Tabela de Símbolos
 		// Quem quiser usar 'env', apenas comente essa linha
-		codeGenerator.symTab.FillTabSymbol(p);
+		//codeGenerator.symTab.FillTabSymbol(p);
 		
 		// Formato da String para o System.out.printlnijava "%d\n"
 		codeGenerator.assembler.add(new LlvmConstantDeclaration("@.formatting.string", "private constant [4 x i8] c\"%d\\0A\\00\""));	
@@ -159,12 +160,15 @@ public class Codegen extends VisitorAdapter{
 		
 	//TODO Teste
 	public LlvmValue visit(VarDecl n){
-		return new LlvmNamedValue("%_" + n.name.s, n.type.accept(this).type);
+		
+		LlvmValue lhs = new LlvmNamedValue("%_" + n.name.s, n.type.accept(this).type);
+		assembler.add(new LlvmAlloca(lhs, lhs.type));
+		return lhs;
 	}
 	
 	//TODO Teste
 	public LlvmValue visit(Formal n){
-		return new LlvmNamedValue("%_" + n.name.s, n.type.accept(this).type);
+		return new LlvmNamedValue("%" + n.name.s, n.type.accept(this).type);
 	}
 	
 	//TODO Teste
@@ -362,6 +366,51 @@ public class Codegen extends VisitorAdapter{
 		return lhs;
 	}
 
+	public LlvmValue visit(ClassDeclSimple n){
+		
+		List<LlvmType> types = new LinkedList<LlvmType>();
+		
+		for(util.List<VarDecl> i = n.varList; i != null; i = i.tail){
+			types.add(i.head.type.accept(this).type);
+		}
+		
+		for(util.List<MethodDecl> i = n.methodList; i != null; i = i.tail){
+			i.head.accept(this);
+		}
+		
+		LlvmClassDeclarator decl = new LlvmClassDeclarator(types, n.name.s, n.methodList.size());
+		assembler.add(decl);
+		
+		
+		return null;
+	}
+	
+	//TODO
+	public LlvmValue visit(MethodDecl n){
+	
+		List<LlvmValue> args = new LinkedList<LlvmValue>();
+		
+		//args.add(new LlvmNamedValue("%class." + classEnv.getName() + " * %this", LlvmPrimitiveType.CUSTOM));
+		for(util.List<syntaxtree.Formal> i = n.formals; i != null; i = i.tail ){
+			args.add(i.head.accept(this));
+		}
+		
+		assembler.add(new LlvmDefine(n.name.s, n.returnType.accept(this).type, args));
+		
+		for(util.List<VarDecl> i = n.locals; i != null; i = i.tail){
+			LlvmValue v = i.head.accept(this);
+			System.out.println(v);
+		}
+		
+		for(util.List<Statement> i = n.body; i != null; i = i.tail){
+			LlvmValue v = i.head.accept(this);
+		}
+		
+		assembler.add(new LlvmRet(n.returnExp.accept(this)));
+		assembler.add(new LlvmCloseDefinition());
+		
+		return null;
+	}
 	
 /**********************************************************************************/
 /* === Restando ==== 
@@ -371,21 +420,8 @@ public class Codegen extends VisitorAdapter{
 /**********************************************************************************/
 
 	//TODO
-	public LlvmValue visit(ClassDeclSimple n){return null;}
-	//TODO
 	public LlvmValue visit(ClassDeclExtends n){return null;}
-	//TODO
-	public LlvmValue visit(MethodDecl n){
 	
-		List<LlvmValue> args = new LinkedList<LlvmValue>();
-		
-		for(util.List<syntaxtree.Formal> i = n.formals; i != null; i = i.tail ){
-			args.add(i.head.accept(this));
-		}
-		assembler.add(new LlvmDefine(n.name.s, n.returnType.accept(this).type, args));
-		
-		return null;
-	}
 	//TODO
 	public LlvmValue visit(ArrayAssign n){
 	

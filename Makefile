@@ -26,7 +26,7 @@ rt:
 	java -classpath src:lib/projeto2.jar main/Main test/test.java test.ll
 
 teste:
-	clang learn.c -S -emit-llvm -o learn.ll
+	clang learn.cpp -S -emit-llvm -o learn.ll
 	lli learn.ll
 
 clean:
