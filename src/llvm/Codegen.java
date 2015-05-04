@@ -461,12 +461,14 @@ class SymTab extends VisitorAdapter{
     	
     	List<LlvmType> typeList = new LinkedList<LlvmType>();
     	List<LlvmValue> varList = new LinkedList<LlvmValue>();
+    	LlvmType t;
     	    	
     	for(util.List<VarDecl> l = n.varList; l != null; l = l.tail){
+    		t = l.head.type.accept(this).type;
     		// Constroi TypeList com os tipos das variáveis da Classe (vai formar a Struct da classe)
-    		typeList.add(l.head.type.accept(this).type);
+    		typeList.add(t);
     		// Constroi VarList com as Variáveis da Classe
-    		varList.add(l.head.name.accept(this));
+    		varList.add(new LlvmNamedValue(l.head.name.s, t));
     	}
     	
     	classEnv = new ClassNode(n.name.s, new LlvmStructure(typeList), varList);
@@ -486,12 +488,14 @@ class SymTab extends VisitorAdapter{
 		
 		List<LlvmType> typeList = new LinkedList<LlvmType>();
     	List<LlvmValue> varList = new LinkedList<LlvmValue>();
-    	    	
+    	LlvmType t;
+    	
     	for(util.List<VarDecl> l = n.varList; l != null; l = l.tail){
+    		t = l.head.type.accept(this).type;
     		// Constroi TypeList com os tipos das variáveis da Classe (vai formar a Struct da classe)
-    		typeList.add(l.head.type.accept(this).type);
+    		typeList.add(t);
     		// Constroi VarList com as Variáveis da Classe
-    		varList.add(l.head.name.accept(this));
+    		varList.add(new LlvmNamedValue(l.head.name.s, t));
     	}
     	
     	classEnv = new ClassNode(n.name.s, new LlvmStructure(typeList), varList);
@@ -554,19 +558,17 @@ class SymTab extends VisitorAdapter{
 		return new LlvmNamedValue("INT", LlvmPrimitiveType.I32);
 	}
 	
-	public int retrieveVarOffset(String className){
-		classEnv = classes.get(className);
-		//if(classEnv.hasUpper())
-		// TODO retornar offset da variavel (apenas considerar classe simples a princípio)
-		return 0;
+	public ClassNode getClass(String className){
+		return classes.get(className);
 	}
+	
 }
 
 class ClassNode extends LlvmType {
 		private String className;
 		private LlvmStructure classType;
 		private String upperClass = "";
-		private List<LlvmValue> attrList; //TODO mudar pra Map
+		private List<LlvmValue> attrList; 
 		private List<MethodNode> methodList = new LinkedList<MethodNode>();
 		private Map<String, Integer> methodIndexes = new HashMap<String, Integer>();
 		private Integer index = 0;
@@ -575,7 +577,6 @@ class ClassNode extends LlvmType {
 			this.className = nameClass;
 			this.classType = classType;
 			this.attrList = varList;
-			// TODO converter List para Map
 		}
 		
 		public void addMethod(MethodNode m){
@@ -593,6 +594,45 @@ class ClassNode extends LlvmType {
 		
 		public String getName(){
 			return this.className;
+		}
+		
+		public int getSize(){
+			return this.classType.sizeByte;
+		}
+		
+		public MethodNode getMethod(String methodName){
+			int i = this.methodIndexes.get(methodName);
+			return this.methodList.get(i);
+			
+		}
+		
+		public int getMethodIndex(String methodName){
+			return this.methodIndexes.get(methodName);
+		}
+		
+		public int getAttrOffset(String name){
+			// TODO considerar caso de herança
+			for(int i = 0; i < this.attrList.size(); i++){
+				if(this.attrList.get(i).toString().equals(name))
+					return i;
+			}
+			
+			return -1;
+		}
+		
+		public LlvmType getAttrType(String name){
+			// TODO considerar caso de herança
+			if(this.hasUpper()){
+				//ClassNode upper = getClass();
+				//upper.getAttrType(name);
+			}
+				
+			for(int i = 0; i < this.attrList.size(); i++){
+				if(this.attrList.get(i).toString().equals(name))
+					return this.attrList.get(i).type;
+			}
+			
+			return null;
 		}
 }
 
@@ -615,6 +655,31 @@ class MethodNode {
 	
 	public String getName(){
 		return this.methodName;
+	}
+	
+/*	public int getVarOffset(String name){
+		// TODO considerar caso de herança
+		for(int i = 0; i < this.attrList.size(); i++){
+			if(this.attrList.get(i).toString().equals(name))
+				return i;
+		}
+		
+		return -1;
+	}
+*/	
+	public LlvmType getVarType(String name){
+		// TODO considerar caso de herança
+		for(int i = 0; i < this.paramList.size(); i++){
+			if(this.paramList.get(i).toString().equals(name))
+				return this.paramList.get(i).type;
+		}
+		
+		for(int i = 0; i < this.variables.size(); i++){
+			if(this.variables.get(i).toString().equals(name))
+				return this.variables.get(i).type;
+		}
+		
+		return null;
 	}
 	
 /*	public void addVar(String name, LlvmType type){
