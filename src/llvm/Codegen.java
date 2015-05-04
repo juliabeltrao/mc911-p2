@@ -60,7 +60,7 @@ public class Codegen extends VisitorAdapter{
 		
 		// Preenchendo a Tabela de Símbolos
 		// Quem quiser usar 'env', apenas comente essa linha
-		//codeGenerator.symTab.FillTabSymbol(p);
+		codeGenerator.symTab.FillTabSymbol(p);
 		
 		// Formato da String para o System.out.printlnijava "%d\n"
 		codeGenerator.assembler.add(new LlvmConstantDeclaration("@.formatting.string", "private constant [4 x i8] c\"%d\\0A\\00\""));	
@@ -168,7 +168,7 @@ public class Codegen extends VisitorAdapter{
 	
 	//TODO Teste
 	public LlvmValue visit(Formal n){
-		return new LlvmNamedValue("%" + n.name.s, n.type.accept(this).type);
+		return new LlvmNamedValue("%_" + n.name.s, n.type.accept(this).type);
 	}
 	
 	//TODO Teste
@@ -272,7 +272,8 @@ public class Codegen extends VisitorAdapter{
 	
 	//TODO Teste
 	public LlvmValue visit(Assign n){
-		LlvmValue lhs =	new LlvmNamedValue( "%_" + n.var.s, new LlvmPointer(n.var.accept(this).type));
+		LlvmValue lhs =	n.var.accept(this);//new LlvmNamedValue( "%_" + n.var.s, new LlvmPointer(n.var.accept(this).type));
+		System.out.println("lhs: " + lhs);
 		assembler.add(new LlvmStore(n.exp.accept(this), lhs));
 		return null;
 	}
@@ -367,6 +368,8 @@ public class Codegen extends VisitorAdapter{
 	}
 
 	public LlvmValue visit(ClassDeclSimple n){
+		
+		//classEnv = symTab.getClass(n.name.s);
 		
 		List<LlvmType> types = new LinkedList<LlvmType>();
 		
