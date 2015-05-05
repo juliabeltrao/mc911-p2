@@ -30,9 +30,9 @@ define i32 @__a__i(%class.a * %this) {
   store i32 1, i32 * %tmp15
   %tmp19 = getelementptr %class.a * %this, i8 0, i32 1
   %tmp20 = load i32 * * %tmp19
-  %tmp21 = add i32 2, 1
-  %tmp22 = getelementptr i32 * %tmp20, i32 %tmp21
-  %tmp23 = load i32 * %tmp22
+  %tmp21 = getelementptr i32 * %tmp20, i32 0
+  %tmp22 = load i32 * %tmp21
+  %tmp23 = sub i32 %tmp22, 1
   ret i32 %tmp23
 }
 declare i32 @printf (i8 *, ...)
