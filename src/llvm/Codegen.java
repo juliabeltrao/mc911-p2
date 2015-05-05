@@ -276,6 +276,8 @@ public class Codegen extends VisitorAdapter{
 		LlvmValue v = n.var.accept(this);
 		LlvmValue exp = n.exp.accept(this);
 		
+		exp.type = new LlvmPointer(exp.type);
+		
 		assembler.add(new LlvmStore(v, exp));
 		
 		return null;

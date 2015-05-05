@@ -13,7 +13,7 @@ define i32 @i() {
   %tmp6 = mul i32 1, 10
   %tmp7 = call i8* @malloc ( i32 %tmp6)
   %tmp5 = bitcast i8* %tmp7 to i32 **
-  store [0 x i32] %tmp4, [10 x i32] %tmp5
+  store [0 x i32] %tmp4, [10 x i32] * %tmp5
   %tmp9 = getelementptr %class.a %this, i32 0, i32 1
   %tmp8 = getelementptr [0 x i32] %tmp9, i32 2
   store i32 1, i32 * %tmp8
