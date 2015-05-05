@@ -273,23 +273,10 @@ public class Codegen extends VisitorAdapter{
 	//TODO
 	public LlvmValue visit(Assign n){
 		
-		LlvmType t;
+		LlvmValue v = n.var.accept(this);
+		LlvmValue exp = n.exp.accept(this);
 		
-		t = methodEnv.getVarType(n.var.s);
-		if(t != null){
-			LlvmValue lhs =	new LlvmNamedValue( "%_" + n.var.s, new LlvmPointer(t));
-			assembler.add(new LlvmStore(n.exp.accept(this), lhs));
-		}
-		else{
-			t = classEnv.getAttrType(n.var.s);
-			LlvmRegister reg = new LlvmRegister(classEnv.getAttrType(n.var.s));
-			int off = classEnv.getAttrOffset(n.var.s);
-			List<LlvmValue> offset = new LinkedList<LlvmValue>();
-			offset.add(new LlvmNamedValue("0", new LlvmTypeClass(classEnv.getName())));
-			offset.add(new LlvmNamedValue(String.valueOf(off), new LlvmTypeClass(classEnv.getName())));
-			assembler.add(new LlvmGetElementPointer(reg, new LlvmNamedValue()));
-		}
-		
+		assembler.add(new LlvmStore(v, exp));
 		
 		return null;
 	}
@@ -441,17 +428,25 @@ public class Codegen extends VisitorAdapter{
 	public LlvmValue visit(Identifier n){
 		
 		LlvmType t;
+		LlvmRegister lhs;
 		
 		t = methodEnv.getVarType(n.s);
-		if(t == null){
-			t = classEnv.getAttrType(n.s);
+		if(t != null){
+			LlvmValue val = new LlvmNamedValue("%_" + n.s, new LlvmPointer(t));
+			lhs = new LlvmRegister(t);
+			
+			assembler.add(new LlvmLoad(lhs, val));
 		}
-		
-		LlvmValue val = new LlvmNamedValue("%_" + n.s, new LlvmPointer(t));
-		LlvmRegister lhs = new LlvmRegister(t);
-		
-		assembler.add(new LlvmLoad(lhs, val));
-		
+		else{
+			t = classEnv.getAttrType(n.s);
+			lhs = new LlvmRegister(classEnv.getAttrType(n.s));
+			int off = classEnv.getAttrOffset(n.s);
+			List<LlvmValue> offset = new LinkedList<LlvmValue>();
+			offset.add(new LlvmNamedValue("0", LlvmPrimitiveType.I32));
+			offset.add(new LlvmNamedValue(String.valueOf(off), LlvmPrimitiveType.I32));
+			assembler.add(new LlvmGetElementPointer(lhs, new LlvmNamedValue("%this", new LlvmTypeClass(classEnv.getName())), offset));
+		}
+
 		return lhs;
 	}
 	
@@ -630,7 +625,7 @@ class SymTab extends VisitorAdapter{
 	}
 	
 	public LlvmValue visit(IntArrayType n){
-		return new LlvmNamedValue("PTR", LlvmPrimitiveType.I32);
+		return new LlvmNamedValue("PTR", new LlvmArray(0, LlvmPrimitiveType.I32));
 	}
 	
 	public LlvmValue visit(BooleanType n){
