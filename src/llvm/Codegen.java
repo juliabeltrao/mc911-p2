@@ -471,7 +471,7 @@ public class Codegen extends VisitorAdapter{
 		LlvmRegister reg = new LlvmRegister(new LlvmPointer(LlvmPrimitiveType.I32));
 		offset.add(new LlvmNamedValue("0", LlvmPrimitiveType.I32));
 		assembler.add(new LlvmGetElementPointer(reg, lhs, offset));
-		assembler.add(new LlvmStore(newSize, reg));
+		assembler.add(new LlvmStore(size, reg));
 		
 		return lhs;
 	}
@@ -557,14 +557,12 @@ public class Codegen extends VisitorAdapter{
 		List<LlvmValue> off = new LinkedList<LlvmValue>();
 		LlvmRegister addr = new LlvmRegister(v.type);
 		LlvmRegister length = new LlvmRegister(LlvmPrimitiveType.I32);
-		LlvmRegister ret = new LlvmRegister(LlvmPrimitiveType.I32);
 		
 		off.add(i);
 		assembler.add(new LlvmGetElementPointer(addr, v, off));
 		assembler.add(new LlvmLoad(length, addr));
-		assembler.add(new LlvmMinus(ret, ret.type, length, new LlvmNamedValue("1", LlvmPrimitiveType.I32)));
 		
-		return ret;
+		return length;
 	}
 	
 /**********************************************************************************/
