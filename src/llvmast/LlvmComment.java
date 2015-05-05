@@ -6,9 +6,9 @@ public class LlvmComment extends LlvmInstruction {
 	
 	public LlvmComment(String s){
 		if(s.startsWith("  ;"))
-			comment = "\n  " + s;
+			comment = "  " + s;
 		else
-			comment = "\n  ;" + s;
+			comment = "  ;" + s;
 	}
 	
 	public String toString(){
