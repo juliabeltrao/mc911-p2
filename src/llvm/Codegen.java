@@ -531,7 +531,6 @@ public class Codegen extends VisitorAdapter{
 	public LlvmValue visit(Call n){
 		
 		LlvmValue obj = n.object.accept(this);
-		System.out.println("HEY" + obj);
 		String name = obj.type.toString().replace("%class.", "");
 		name = name.replace(" *", "");
 		LlvmType retType = symTab.getClass(name).getMethod(n.method.s).methodType;
@@ -550,6 +549,24 @@ public class Codegen extends VisitorAdapter{
 		return ret;
 	}
 	
+	//TODO
+	public LlvmValue visit(ArrayLength n){
+	
+		LlvmValue v = n.array.accept(this);
+		LlvmNamedValue i = new LlvmNamedValue("0", LlvmPrimitiveType.I32);
+		List<LlvmValue> off = new LinkedList<LlvmValue>();
+		LlvmRegister addr = new LlvmRegister(v.type);
+		LlvmRegister length = new LlvmRegister(LlvmPrimitiveType.I32);
+		LlvmRegister ret = new LlvmRegister(LlvmPrimitiveType.I32);
+		
+		off.add(i);
+		assembler.add(new LlvmGetElementPointer(addr, v, off));
+		assembler.add(new LlvmLoad(length, addr));
+		assembler.add(new LlvmMinus(ret, ret.type, length, new LlvmNamedValue("1", LlvmPrimitiveType.I32)));
+		
+		return ret;
+	}
+	
 /**********************************************************************************/
 /* === Restando ==== 
 * 
@@ -559,8 +576,6 @@ public class Codegen extends VisitorAdapter{
 
 	//TODO
 	public LlvmValue visit(ClassDeclExtends n){return null;}
-	//TODO
-	public LlvmValue visit(ArrayLength n){return null;}
 	
 
 }

@@ -10,5 +10,5 @@ class m330
 class a
 {
    int[] i;
-   public int i(){i = new int[10]; i[2] = 1; return i[2];}
+   public int i(){i = new int[10]; i[2] = 1; return i.length;}
 }
