@@ -590,6 +590,7 @@ public class Codegen extends VisitorAdapter{
 	public LlvmValue visit(ClassDeclExtends n){
 		
 		List<LlvmType> types = new LinkedList<LlvmType>();
+		ClassNode superClass;
 		int superMethodCounter = 0;
 		
 		types.add(new LlvmTypeClass(n.superClass.s));
@@ -598,11 +599,11 @@ public class Codegen extends VisitorAdapter{
 			types.add(i.head.type.accept(this).type);
 		}
 		
-		classEnv = symTab.getClass(n.superClass.s);
+		superClass = symTab.getClass(n.superClass.s);
 		
 		for(util.List<MethodDecl> i = n.methodList; i != null; i = i.tail){
 			i.head.accept(this);
-			if(!classEnv.containsMethod(i.head.name.s)){
+			if(!superClass.containsMethod(i.head.name.s)){
 				superMethodCounter++;
 			}
 		}
