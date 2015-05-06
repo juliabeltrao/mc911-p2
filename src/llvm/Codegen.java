@@ -388,8 +388,7 @@ public class Codegen extends VisitorAdapter{
 		}
 		
 		LlvmClassDeclarator decl = new LlvmClassDeclarator(types, n.name.s, n.methodList.size());
-		assembler.add(0, decl);
-		
+		assembler.add(0, decl);	
 		
 		return null;
 	}
@@ -533,6 +532,11 @@ public class Codegen extends VisitorAdapter{
 		LlvmValue obj = n.object.accept(this);
 		String name = obj.type.toString().replace("%class.", "");
 		name = name.replace(" *", "");
+		
+		while(!symTab.getClass(name).containsMethod(n.method.s)){
+			name = symTab.getClass(name).getUpperName();
+		}
+		
 		LlvmType retType = symTab.getClass(name).getMethod(n.method.s).methodType;
 		
 		List<LlvmValue> args = new LinkedList<LlvmValue>();
@@ -573,7 +577,31 @@ public class Codegen extends VisitorAdapter{
 /**********************************************************************************/
 
 	//TODO
-	public LlvmValue visit(ClassDeclExtends n){return null;}
+	public LlvmValue visit(ClassDeclExtends n){
+		
+		List<LlvmType> types = new LinkedList<LlvmType>();
+		int superMethodCounter = 0;
+		
+		types.add(new LlvmTypeClass(n.superClass.s));
+		
+		for(util.List<VarDecl> i = n.varList; i != null; i = i.tail){
+			types.add(i.head.type.accept(this).type);
+		}
+		
+		classEnv = symTab.getClass(n.superClass.s);
+		
+		for(util.List<MethodDecl> i = n.methodList; i != null; i = i.tail){
+			i.head.accept(this);
+			if(!classEnv.containsMethod(i.head.name.s)){
+				superMethodCounter++;
+			}
+		}
+		
+		LlvmClassDeclarator decl = new LlvmClassDeclarator(types, n.name.s, n.methodList.size()+superMethodCounter);
+		assembler.add(decl);
+		
+		return null;
+	}
 	
 
 }
@@ -643,7 +671,7 @@ class SymTab extends VisitorAdapter{
 		List<LlvmType> typeList = new LinkedList<LlvmType>();
     	List<LlvmValue> varList = new LinkedList<LlvmValue>();
     	LlvmType t;
-    	
+    	    	
     	for(util.List<VarDecl> l = n.varList; l != null; l = l.tail){
     		t = l.head.type.accept(this).type;
     		// Constroi TypeList com os tipos das variáveis da Classe (vai formar a Struct da classe)
@@ -750,8 +778,16 @@ class ClassNode extends LlvmType {
 			return this.className;
 		}
 		
+		public String getUpperName(){
+			return this.upperClass;
+		}
+		
 		public int getSize(){
 			return this.classType.sizeByte;
+		}
+		
+		public boolean containsMethod(String methodName){
+			return this.methodIndexes.containsKey(methodName);
 		}
 		
 		public MethodNode getMethod(String methodName){
@@ -772,6 +808,10 @@ class ClassNode extends LlvmType {
 			}
 			
 			return -1;
+		}
+		
+		public List<LlvmValue> getAttrList(){
+			return this.attrList;
 		}
 		
 		public LlvmType getAttrType(String name){
