@@ -21,7 +21,7 @@ define i32 @__a__i(%class.a * %this) {
   %tmp13 = call i8* @malloc ( i32 %tmp12)
   %tmp11 = bitcast i8* %tmp13 to i32*
   %tmp14 = getelementptr i32 * %tmp11, i32 0
-  store i32 %tmp10, i32 * %tmp14
+  store i32 10, i32 * %tmp14
   store i32 * %tmp11, i32 * * %tmp8
   %tmp16 = getelementptr %class.a * %this, i8 0, i32 1
   %tmp17 = load i32 * * %tmp16
@@ -32,8 +32,7 @@ define i32 @__a__i(%class.a * %this) {
   %tmp20 = load i32 * * %tmp19
   %tmp21 = getelementptr i32 * %tmp20, i32 0
   %tmp22 = load i32 * %tmp21
-  %tmp23 = sub i32 %tmp22, 1
-  ret i32 %tmp23
+  ret i32 %tmp22
 }
 declare i32 @printf (i8 *, ...)
 declare i8 * @malloc (i32)
