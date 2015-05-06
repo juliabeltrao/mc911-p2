@@ -13,6 +13,8 @@ public class LlvmStructure extends LlvmType{
 	for (LlvmType T : typeList){
 		if ( T instanceof LlvmPointer ){ 
 			sizeByte += 8;
+		} else if( T instanceof LlvmArray ){
+			sizeByte += ((LlvmArray)T).length * 8;
 		} else {
 			if ( T instanceof LlvmPrimitiveType){
 				if (T.toString().equals("i32")){

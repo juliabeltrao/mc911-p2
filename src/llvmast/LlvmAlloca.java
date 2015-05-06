@@ -4,17 +4,19 @@ public  class LlvmAlloca extends LlvmInstruction{
     public LlvmValue lhs;
     public LlvmType type;
     public List<LlvmValue> numbers;
+    String s = "";
 
     public LlvmAlloca(LlvmValue lhs, LlvmType type, List<LlvmValue> numbers){
-	this.lhs = lhs;
-	this.type = type;
-	this.numbers = numbers;
+    	for(LlvmValue v : numbers)
+		    s = s + ", " + v.type + " " + v;
+    	s = "  " + lhs + " = alloca " + type + s;
+    }
+    
+    public LlvmAlloca(LlvmValue lhs, LlvmType type){
+    	s = "  " + lhs + " = alloca " + type;
     }
 
     public String toString(){
-	String nrs = "";
-	for(LlvmValue v : numbers)
-	    nrs = nrs + ", " + v.type + " " + v;
-	return "  " + lhs + " = alloca " + type + nrs;
+		return s;
     }
 }

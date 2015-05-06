@@ -8,6 +8,6 @@ public class LlvmConstantDeclaration extends LlvmInstruction{
     }
     
     public String toString(){
-	return name + " = " + rhs;
+    	return name + " = " + rhs;
     }
 }
